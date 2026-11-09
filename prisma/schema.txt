@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role { STUDENT; PROFESSOR; ADMIN }
+enum AttendanceStatus { PENDING_VERIFICATION; VERIFIED; FLAGGED }
+
+model User {
+  id          String             @id @default(uuid())
+  email       String             @unique
+  name        String
+  role        Role               @default(STUDENT)
+  createdAt   DateTime           @default(now())
+  classes     ClassSession[]     @relation("ProfessorClasses")
+  attendances AttendanceRecord[]
+}
+
+model ClassSession {
+  id          String             @id @default(uuid())
+  title       String   
+  professorId String
+  startTime   DateTime
+  endTime     DateTime
+  isActive    Boolean            @default(false)
+  professor   User               @relation("ProfessorClasses", fields: [professorId], references: [id])
+  attendances AttendanceRecord[]
+}
+
+model AttendanceRecord {
+  id          String           @id @default(uuid())
+  studentId   String
+  classId     String
+  timestamp   DateTime         @default(now())
+  latitude    Float
+  longitude   Float
+  deviceId    String           
+  status      AttendanceStatus @default(PENDING_VERIFICATION)
+  student     User             @relation(fields: [studentId], references: [id])
+  classSession ClassSession    @relation(fields: [classId], references: [id])
+
+  @@unique([studentId, classId, timestamp]) 
+}
