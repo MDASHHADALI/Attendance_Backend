@@ -3,12 +3,30 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-enum Role { STUDENT; PROFESSOR; ADMIN }
-enum AttendanceStatus { PENDING_VERIFICATION; VERIFIED; FLAGGED }
+// -------------------------------------
+// Enums
+// -------------------------------------
+
+enum Role {
+  STUDENT
+  PROFESSOR
+  ADMIN
+}
+
+enum AttendanceStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  FLAGGED
+}
+
+// -------------------------------------
+// Models
+// -------------------------------------
 
 model User {
   id          String             @id @default(uuid())
@@ -16,6 +34,8 @@ model User {
   name        String
   role        Role               @default(STUDENT)
   createdAt   DateTime           @default(now())
+  
+  // Relations
   classes     ClassSession[]     @relation("ProfessorClasses")
   attendances AttendanceRecord[]
 }
@@ -27,6 +47,8 @@ model ClassSession {
   startTime   DateTime
   endTime     DateTime
   isActive    Boolean            @default(false)
+  
+  // Relations
   professor   User               @relation("ProfessorClasses", fields: [professorId], references: [id])
   attendances AttendanceRecord[]
 }
@@ -40,6 +62,8 @@ model AttendanceRecord {
   longitude   Float
   deviceId    String           
   status      AttendanceStatus @default(PENDING_VERIFICATION)
+  
+  // Relations
   student     User             @relation(fields: [studentId], references: [id])
   classSession ClassSession    @relation(fields: [classId], references: [id])
 
